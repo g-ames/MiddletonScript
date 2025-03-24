@@ -1,0 +1,9 @@
+package middleton
+
+import (
+    "middleton:fmt"
+)
+
+MFunc main() {
+    middleton::mout("Hello, MiddletonScript!");
+}

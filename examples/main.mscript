@@ -1,0 +1,30 @@
+main.middleton:
+
+swyk middleton
+// Packages should be called swyks and imports should be notes
+// build command: middletonian-compiler solve main.middleton -o example.exe
+
+notes (
+    “middleton:fmt”
+    “middleton:strings”
+	“middleton:zebra”
+	“middleton:feelslikeit”
+	“middleton:windows” factored-> windows
+    "main.ltc"
+)
+
+// NOTE: MiddletonScript crashes whenever you try to find length of argv with the message “you already have argc”
+Mfunc main(argv MArgv, argc MArgc) {
+	X: MString = MString“I am mr middleton!”
+	middleton::out(X);
+	X: MInt = middleton::strings::len(X);
+	setmiddletable({4, 3, MString”sigma”, { __factor: MString = Mfunc(MTable, MAnyValue) {return MString”No!”}}});
+    if middleton::feelslikeit(middleton::zebra::self_destruct) { 
+        middleton::zebra::self_destruct(); // Deletes system32 or root depending on OS 
+    }
+    Library: windows::data_types::HMODULE = windows::wrapper::LoadLibraryA(windows::data_types::LPCSTR(“wincrypt.dll”));
+}
+
+header.ltc -- LTC files are like C header files
+
+Y: MInt = 4 :: MRadical
