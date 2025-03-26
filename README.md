@@ -26,6 +26,10 @@ MiddletonScript can be run very easily.
 middle hello.middle
 ```
 
+### NOTE: standard implementations are NOT included by default! You need to include them in your ltc!
+For more information, read the "Advanced ltc concepts" section.
+###
+
 You can also output directly as a MiddletonScript bytecode file (.middlebytes):
 ```sh
 middle -b hello.middle
