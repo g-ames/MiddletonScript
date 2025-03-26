@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -35,10 +36,10 @@ var typeKeywords = []string{
 
 type ASTNode struct {
 	parent   *ASTNode
-	children []*ASTNode
+	children []interface{}
 }
 
-func (n *ASTNode) AppendChild(child *ASTNode) {
+func (n *ASTNode) AppendChild(child interface{}) {
 	n.children = append(n.children, child)
 }
 
@@ -52,10 +53,11 @@ func NewRootASTNode() *RootASTNode {
 
 type Expr struct {
 	ASTNode
+	value interface{}
 }
 
-func NewExpr(parent *ASTNode) *Expr {
-	return &Expr{ASTNode: ASTNode{parent: parent}}
+func NewExpr(parent *ASTNode, s interface{}) *Expr {
+	return &Expr{ASTNode: ASTNode{parent: parent}, value: s}
 }
 
 func isNumericCharacter(char rune) bool {
@@ -82,6 +84,8 @@ type Token struct {
 	At    int
 	Start int
 }
+
+var TOKEN_GROUPS = []string{"++", "--", "//", "==", "!=", "/=", "%=", "-=", "+=", "&&"}
 
 func lex(source string) []Token {
 	var tokens []Token
@@ -176,6 +180,40 @@ func contains(slice []string, value string) bool {
 	return false
 }
 
+var OPERATOR_PRECEDENCE = map[string]int {
+    "=": 1,
+    "||": 2,
+    "&&": 3,
+    "<": 7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
+    "+": 10, "-": 10,
+    "*": 20, "/": 20, "%": 20,
+};
+
+func parse(tokens []Token) *RootASTNode {
+	root := NewRootASTNode()
+	
+	popToken := func() Token {
+		popped := tokens[0]
+		tokens = tokens[1:]
+		return popped
+	}
+
+	nextExpression := func() *Expr {
+		expr := NewExpr(&root.ASTNode, popToken())
+		return expr
+	}
+
+	parseRoot := func() *RootASTNode {
+		for len(tokens) > 0 {
+			root.AppendChild(nextExpression())
+		}
+
+		return root
+	}
+
+	return parseRoot()
+}
+
 type MiddletonInterpreter struct {
 	middletonian map[string]interface{}
 }
@@ -184,8 +222,10 @@ func (mi *MiddletonInterpreter) ToBytecode(source string) []byte {
 	var middlebytes []byte
 
 	tokens := lex(source)
-	// Parsing is not implemented here, so just output tokens
 	fmt.Println("Tokens:", tokens)
+
+	parsed := parse(tokens)
+	fmt.Println("Parsed:", parsed)
 
 	return middlebytes
 }
