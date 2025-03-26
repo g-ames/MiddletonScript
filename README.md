@@ -26,7 +26,7 @@ MiddletonScript can be run very easily.
 middle hello.middle
 ```
 
-You can also output directly as a MiddletonScript bytecode file:
+You can also output directly as a MiddletonScript bytecode file (.middlebytes):
 ```sh
 middle -b hello.middle
 ```
