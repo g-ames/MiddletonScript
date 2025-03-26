@@ -9,21 +9,6 @@ import (
 	"unicode"
 )
 
-/*
-   What is a CFG?
-
-       A CFG is a Context-Free-Grammar.
-
-   How is it implemented?
-
-       Every Expr has a value that can come next, and if it doesn't
-           meet one of those values that can come next, there should be an error thrown.
-           When that next value is correct, you add it to the AST (Abstract Syntax Tree),
-           specifying for the later code-generation step. But in order to get to that, we
-           must first parse the CFG rules to allow them to be understood in a
-           "What comes next?" context.
-*/
-
 var keywords = []string{
 	"package",
 	"import",
@@ -157,6 +142,9 @@ func lex(source string) []Token {
 			pushToken("")
 			if charType != "other" {
 				token += string(char)
+			} else {
+				token = string(char)
+				pushToken("")
 			}
 		} else {
 			token += string(char)
@@ -204,24 +192,28 @@ func parse(tokens []Token) *RootASTNode {
 		return popped
 	}
 	
-	// pop expecting
-	poptokexs := func(vs []string) []Token {
-		if !slices.Contains(vs, tok()) {
+	// pop expecting: this version can contain multiple "next-tokens"
+	/*
+	poptokexs := func(vs []string) Token {
+		if !slices.Contains(vs, tok().Value) {
 			log.Fatal(fmt.Errorf("Got '%s' expected %s", tok(), strings.Join(vs, " or ")))
 		}
 		
 		return poptok()
 	}
-	
+	*/
+
 	poptokex := func(v string) Token {
-		if v != tok() {
-			log.Fatal(fmt.Errorf("Got '%s' expected %s", tok(), v))
+		if v != tok().Value {
+			log.Fatal(fmt.Errorf("Got '%s' expected '%s'", tok().Value, v))
 		}
 		
 		return poptok()
 	}
+
+	nextExpression := func() *Expr { return NewExpr(&root.ASTNode, nil) }
 	
-	parseIf := func() {
+	parseIf := func() ASTNode {
 		poptokex("if")
 		poptokex("(")
 		nextExpression()
@@ -229,13 +221,48 @@ func parse(tokens []Token) *RootASTNode {
 		poptokex("{")
 		nextExpression()
 		poptokex("}")
+		
+		return ASTNode{}
 	}
 	
-	nextExpression := func() *Expr {
-		var exprv any
+	parseSwyk := func() ASTNode {
+		poptokex("swyk")
+
+		popped := poptok()		
+		if popped.Type != "alnum" {
+			log.Fatal(fmt.Errorf("Expected 'alnum', got '%s'!", popped.Type))
+		}
 		
-		if tok() == "if" {
-			exprv := parseIf()
+		return ASTNode{}
+	}
+
+	parseNotes := func() ASTNode {
+		poptokex("notes")
+		poptokex("(")
+
+		for tok().Value != ")" { 
+			popped := poptok()
+			
+			if popped.Type != "string" {
+				log.Fatal(fmt.Errorf("Expected 'string', got '%s'!", popped.Type))
+			}
+		}
+		
+
+		return ASTNode{}
+	}
+
+	nextExpression = func() *Expr {
+		var exprv ASTNode
+		
+		if tok().Value == "if" {
+			exprv = parseIf()
+		} else if tok().Value == "swyk" {
+			exprv = parseSwyk()
+		} else if tok().Value == "notes" {
+			exprv = parseNotes()
+		} else {
+			log.Fatal(fmt.Errorf("MiddletonScript unexpected error: '%s' found. Mr. Middleton does not know what to do with this...", tok().Value))
 		}
 		
 		expr := NewExpr(&root.ASTNode, exprv)
