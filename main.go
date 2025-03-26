@@ -194,15 +194,36 @@ func main() {
 	args := os.Args[1:]
 
 	if len(args) == 0 {
-		fmt.Println("MIDDLETON READY. FILE GO INPUT?")
+		fmt.Println("MiddletonScript ready! Interpreting a 'Hello World' example.")
+		middleton := MiddletonInterpreter{}
+		middlebytes := middleton.ToBytecode(`
+		swyk middleton
+
+		notes (
+			"middleton:fmt"
+		)
+
+		MFunc main() {
+    			middleton::mout("Hello, MiddletonScript!");
+		}
+		`)
+		fmt.Println(middlebytes)
 		return
 	}
 
-	flags := []rune{}
+	var flags []rune
 
+	// Flags pass
 	for _, arg := range args {
 		if arg[0] == '-' {
 			flags = append(flags, rune(arg[1]))
+			continue
+		}
+	}
+
+	for _, arg := range args {
+		// Ignore flags as we have already parsed them
+		if arg[0] == '-' {
 			continue
 		}
 
