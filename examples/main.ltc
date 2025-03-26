@@ -1,0 +1,2 @@
+goget fmt
+make main.middle
