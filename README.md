@@ -48,17 +48,22 @@ make hello.middle (are ya winning son?)
 ```
 
 This .ltc file, which we will call middle.ltc, is very simple.
-The 'make' command is similar to using the CLI command 'middle'.
 For example, 
 ```sh
 middle -b hello.middle
 ```
 becomes
 ```ltc
-make -b hello.middle (are ya winning son?)
+middle -b hello.middle (are ya winning son?)
 ```
 
 ## Advanced ltc concepts
 
 The '(are ya winning son?)' option allows you to error handle in a .ltc file.
-The 'goget' option allows you to 'goget' the latest version of a MiddletonScript package.
+```ltc
+middle hello.middle (are ya winning son?)
+```
+The 'goget' option allows you to 'goget' the latest version of MiddletonScript notes.
+```ltc
+goget fmt (are ya winning son?)
+```
