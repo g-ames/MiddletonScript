@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -180,26 +179,66 @@ func contains(slice []string, value string) bool {
 	return false
 }
 
-var OPERATOR_PRECEDENCE = map[string]int {
-    "=": 1,
-    "||": 2,
-    "&&": 3,
-    "<": 7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
-    "+": 10, "-": 10,
-    "*": 20, "/": 20, "%": 20,
-};
+var OPERATOR_PRECEDENCE = map[string]int{
+	"=":  1,
+	"||": 2,
+	"&&": 3,
+	"<":  7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
+	"+": 10, "-": 10,
+	"*": 20, "/": 20, "%": 20,
+}
 
 func parse(tokens []Token) *RootASTNode {
 	root := NewRootASTNode()
+
+	// Choose whether to pop or just get the token
+	// Pop tokens so that the Expr can be made until there are no tokens left
 	
-	popToken := func() Token {
+	tok := func() Token {
+		return tokens[0]
+	}
+	
+	poptok := func() Token {
 		popped := tokens[0]
 		tokens = tokens[1:]
 		return popped
 	}
-
+	
+	// pop expecting
+	poptokexs := func(vs []string) []Token {
+		if !slices.Contains(vs, tok()) {
+			log.Fatal(fmt.Errorf("Got '%s' expected %s", tok(), strings.Join(vs, " or ")))
+		}
+		
+		return poptok()
+	}
+	
+	poptokex := func(v string) Token {
+		if v != tok() {
+			log.Fatal(fmt.Errorf("Got '%s' expected %s", tok(), v))
+		}
+		
+		return poptok()
+	}
+	
+	parseIf := func() {
+		poptokex("if")
+		poptokex("(")
+		nextExpression()
+		poptokex(")")
+		poptokex("{")
+		nextExpression()
+		poptokex("}")
+	}
+	
 	nextExpression := func() *Expr {
-		expr := NewExpr(&root.ASTNode, popToken())
+		var exprv any
+		
+		if tok() == "if" {
+			exprv := parseIf()
+		}
+		
+		expr := NewExpr(&root.ASTNode, exprv)
 		return expr
 	}
 
