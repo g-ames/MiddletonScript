@@ -2,24 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"slices"
 	"strings"
 	"unicode"
-	"os"
 )
 
 /*
-    What is a CFG?
-    
-        A CFG is a Context-Free-Grammar.
-    
-    How is it implemented?
+   What is a CFG?
 
-        Every Expr has a value that can come next, and if it doesn't 
-            meet one of those values that can come next, there should be an error thrown.
-            When that next value is correct, you add it to the AST (Abstract Syntax Tree), 
-            specifying for the later code-generation step. But in order to get to that, we 
-            must first parse the CFG rules to allow them to be understood in a 
-            "What comes next?" context.
+       A CFG is a Context-Free-Grammar.
+
+   How is it implemented?
+
+       Every Expr has a value that can come next, and if it doesn't
+           meet one of those values that can come next, there should be an error thrown.
+           When that next value is correct, you add it to the AST (Abstract Syntax Tree),
+           specifying for the later code-generation step. But in order to get to that, we
+           must first parse the CFG rules to allow them to be understood in a
+           "What comes next?" context.
 */
 
 var keywords = []string{
@@ -178,16 +180,32 @@ type MiddletonInterpreter struct {
 	middletonian map[string]interface{}
 }
 
-func (mi *MiddletonInterpreter) ToBytecode(source string) {
+func (mi *MiddletonInterpreter) ToBytecode(source string) []byte {
+	var middlebytes []byte
+
 	tokens := lex(source)
 	// Parsing is not implemented here, so just output tokens
 	fmt.Println("Tokens:", tokens)
+
+	return middlebytes
 }
 
 func main() {
 	args := os.Args[1:]
 
+	if len(args) == 0 {
+		fmt.Println("MIDDLETON READY. FILE GO INPUT?")
+		return
+	}
+
+	flags := []rune{}
+
 	for _, arg := range args {
+		if arg[0] == '-' {
+			flags = append(flags, rune(arg[1]))
+			continue
+		}
+
 		data, err := os.ReadFile(arg)
 
 		if err != nil {
@@ -196,6 +214,20 @@ func main() {
 		}
 
 		middleton := MiddletonInterpreter{}
-		middleton.ToBytecode(string(data))
+		middlebytes := middleton.ToBytecode(string(data))
+
+		if slices.Contains(flags, 'b') {
+			file, err := os.Create(arg + ".middlebytes")
+			if err != nil {
+				log.Fatal(fmt.Errorf("Error opening MiddletonScript bytes file! %s", err))
+			}
+
+			_, err = file.Write(middlebytes)
+			if err != nil {
+				log.Fatal(fmt.Errorf("Error writing to MiddletonScript bytes file! %s", err))
+			}
+
+			file.Close()
+		}
 	}
 }
