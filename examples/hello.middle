@@ -5,5 +5,5 @@ notes (
 )
 
 MFunc main() {
-	middleton::mout("Hello, MiddletonScript!");
+	middleton::mout("Hello, MiddletonScript!")
 }
