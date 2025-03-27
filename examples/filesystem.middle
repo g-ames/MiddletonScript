@@ -1,0 +1,17 @@
+swyk main
+
+notes (
+	"middleton:fmt"
+	"middleton:fs"
+)
+
+MFunc main() {
+	// File read example
+	
+	File any = middleton::fs::open("any.txt")
+	middleton::mout(any.read())
+	any.close()
+	
+	// Direct file read example
+	middleton::mout(middleton::fs::read("any.txt"))
+}
