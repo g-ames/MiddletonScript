@@ -69,7 +69,15 @@ type Token struct {
 	Start int
 }
 
+func (t Token) String() string {
+    return fmt.Sprintf("<%s '%s' %d:%d>", t.Type, t.Value, t.At, t.Start)
+}
+
 var TOKEN_GROUPS = []string{"++", "--", "//", "==", "!=", "/=", "%=", "-=", "+=", "&&"}
+
+func errtok(ref Token, msg string)  {
+	log.Fatal(fmt.Errorf("Fatal error on line %d!\n%s", ref.At, msg))
+}
 
 func lex(source string) []Token {
 	var tokens []Token
@@ -78,7 +86,8 @@ func lex(source string) []Token {
 	line := 0
 	lastCharType := ""
 	tokenStart := 0
-
+	ignoreLine := false
+	
 	pushCategorizedToken := func(token string) {
 		if token[0] == '"' && token[len(token)-1] == '"' {
 			tokens = append(tokens, Token{Value: token, Type: "string", At: line, Start: tokenStart})
@@ -112,7 +121,10 @@ func lex(source string) []Token {
 	for i, char := range source {
 		if char == '\n' {
 			line++
+			ignoreLine = false
 		}
+
+		if ignoreLine { continue }
 
 		if char == '"' {
 			inQuote = !inQuote
@@ -196,7 +208,7 @@ func parse(tokens []Token) *RootASTNode {
 	/*
 	poptokexs := func(vs []string) Token {
 		if !slices.Contains(vs, tok().Value) {
-			log.Fatal(fmt.Errorf("Got '%s' expected %s", tok(), strings.Join(vs, " or ")))
+			errtok(tok(), fmt.Sprintf("Got '%s' expected %s", tok(), strings.Join(vs, " or ")))
 		}
 		
 		return poptok()
@@ -205,7 +217,7 @@ func parse(tokens []Token) *RootASTNode {
 
 	poptokex := func(v string) Token {
 		if v != tok().Value {
-			log.Fatal(fmt.Errorf("Got '%s' expected '%s'", tok().Value, v))
+			errtok(tok(), fmt.Sprintf("Got '%s' expected '%s'", tok().Value, v))
 		}
 		
 		return poptok()
@@ -230,7 +242,7 @@ func parse(tokens []Token) *RootASTNode {
 
 		popped := poptok()		
 		if popped.Type != "alnum" {
-			log.Fatal(fmt.Errorf("Expected 'alnum', got '%s'!", popped.Type))
+			errtok(popped, fmt.Sprintf("Expected 'alnum', got '%s'!", popped.Type))
 		}
 		
 		return ASTNode{}
@@ -244,11 +256,37 @@ func parse(tokens []Token) *RootASTNode {
 			popped := poptok()
 			
 			if popped.Type != "string" {
-				log.Fatal(fmt.Errorf("Expected 'string', got '%s'!", popped.Type))
+				errtok(popped, fmt.Sprintf("Expected 'string', got '%s' (%s)!", popped.Value, popped.Type))
 			}
 		}
 		
+		poptokex(")")
 
+		return ASTNode{}
+	}
+
+	parseMFunc := func() ASTNode {
+		poptokex("MFunc")
+		fname := poptok()
+		if fname.Type != "alnum" {
+			errtok(fname, fmt.Sprintf("Invalid function name '%s'", fname.Value))
+		}
+		poptokex("(")
+		for tok().Value != ")" {
+			ptype := poptok()
+			if !slices.Contains(typeKeywords, ptype.Value) {
+				errtok(ptype, fmt.Sprintf("Parameter type unknown: '%s'", ptype.Value))
+			}
+			
+			pname := poptok()
+			if pname.Type != "alnum" {
+				errtok(ptype, fmt.Sprintf("'%s' found, expected 'alnum'!", ptype.Type))
+			}
+		}
+		poptokex(")")
+		poptokex("{")
+		nextExpression()
+		poptokex("}")
 		return ASTNode{}
 	}
 
@@ -261,8 +299,10 @@ func parse(tokens []Token) *RootASTNode {
 			exprv = parseSwyk()
 		} else if tok().Value == "notes" {
 			exprv = parseNotes()
+		} else if tok().Value == "MFunc" {
+			exprv = parseMFunc()
 		} else {
-			log.Fatal(fmt.Errorf("MiddletonScript unexpected error: '%s' found. Mr. Middleton does not know what to do with this...", tok().Value))
+			errtok(tok(), fmt.Sprintf("MiddletonScript global parse error: %s '%s' found.", tok().Type, tok().Value))
 		}
 		
 		expr := NewExpr(&root.ASTNode, exprv)
@@ -296,6 +336,21 @@ func (mi *MiddletonInterpreter) ToBytecode(source string) []byte {
 	return middlebytes
 }
 
+func repl() {
+	fmt.Println("NOTE: the MiddletonScript REPL is experimental!")
+	running := true
+
+	var input string
+	middleton := MiddletonInterpreter{}
+
+	for running {
+		fmt.Print(">> ")
+		fmt.Scan(&input)
+		middlebytes := middleton.ToBytecode(input)
+		fmt.Println(middlebytes)
+	}
+}
+
 func main() {
 	args := os.Args[1:]
 
@@ -321,6 +376,11 @@ func main() {
 
 	// Flags pass
 	for _, arg := range args {
+		if arg == "--repl" {
+			repl()
+			return
+		}
+	
 		if arg[0] == '-' {
 			flags = append(flags, rune(arg[1]))
 			continue
