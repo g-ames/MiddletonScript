@@ -26,6 +26,14 @@ MiddletonScript can be run very easily.
 middle hello.middle
 ```
 
+You can also run all the examples like so:
+
+```sh
+middle -d examples
+```
+
+The '-d' flag allows you to pick a .middle file from a directory. 
+
 ### NOTE: standard implementations are NOT included by default! You need to include them in your ltc!
 For more information, read the "Advanced ltc concepts" section.
 ###
