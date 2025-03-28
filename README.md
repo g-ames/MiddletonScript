@@ -1,6 +1,6 @@
 # MiddletonScript
 
-![Mr. Middleton](https://s8.ezgif.com/tmp/ezgif-80f07335f72f1.jpg)
+![Mr. Middleton](https://github.com/g-ames/MiddletonScript/blob/main/examples/Profile.jpg?raw=true)
 
 ## Overview
 
