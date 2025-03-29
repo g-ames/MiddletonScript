@@ -75,10 +75,12 @@ func (t Token) String() string {
 var TOKEN_GROUPS = []string{"++", "--", "//", "==", "!=", "/=", "%=", "-=", "+=", "&&"}
 
 func errtok(ref Token, msg string)  {
-	log.Fatal(fmt.Errorf("Fatal error on line %d!\n%s", ref.At, msg))
+	log.Fatal(fmt.Errorf("Fatal error on line %d!\n%s", ref.At + 1, msg))
 }
 
 func lex(source string) []Token {
+	if strings.TrimSpace(string) == "" { return []Token{} }
+
 	var tokens []Token
 	inQuote := false
 	var token string
@@ -189,6 +191,8 @@ var OPERATOR_PRECEDENCE = map[string]int{
 
 func parse(tokens []Token) *RootASTNode {
 	root := NewRootASTNode()
+
+	if len(tokens) == 0 { return root }
 
 	// Choose whether to pop or just get the token
 	// Pop tokens so that the Expr can be made until there are no tokens left
